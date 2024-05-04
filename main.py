@@ -1,5 +1,61 @@
 import json
+import random
 
+def generate_random():
+    '''
+        Generate random NIKs
+    '''
+    with open('data/province.json', 'r') as f:
+        provinces = json.load(f)
+
+    with open('data/regency.json', 'r') as f:
+        kabupaten = json.load(f)
+
+    with open('data/subdistrict.json', 'r') as f:
+        subdistricts = json.load(f)
+
+    print("Generate Random NIKs")
+    print("Enter the number of NIKs to generate")
+    n = input("Number of NIKs: ")
+
+    while not n.isdigit():
+        print("Invalid input. Please enter a valid number.")
+        n = input("Number of NIKs: ")
+
+    n = int(n)
+
+    def search_regency(province_code):
+        regency_group = [regency for regency_group in kabupaten for regency in regency_group if regency['kode_dagri'].startswith(province_code)]
+        return regency_group[random.randint(0, len(regency_group) - 1)]
+
+    def search_subdistrict(province_code, regency_code):
+        subdistrict_group = [subdistrict for subdistrict_group in subdistricts for subdistrict in subdistrict_group if subdistrict['kode_dagri'].startswith(province_code + "." + regency_code)]
+        return subdistrict_group[random.randint(0, len(subdistrict_group) - 1)]
+
+    for _ in range(n):
+        province = provinces[random.randint(0, len(provinces) - 1)]
+        regency = search_regency(province['kode_dagri'])
+        subdistrict = search_subdistrict(province['kode_dagri'], regency['kode_dagri'][-2:])
+        birth_date = str(random.randint(1, 31)).zfill(2)
+        birth_month = str(random.randint(1, 12)).zfill(2)
+        birth_year = str(random.randint(0, 99)).zfill(2)
+        gender = random.choice(['M', 'F'])
+
+        if gender == 'F':
+            birth_date = str(int(birth_date) + 40).zfill(2)
+
+        special_code = str(random.randint(0, 9999)).zfill(4)
+
+        nik = province['kode_dagri'] + regency['kode_dagri'][-2:] + subdistrict['kode_dagri'][-2:] + birth_date + birth_month + birth_year + special_code
+        print("Province:", province['nama_dagri'])
+        print("Regency:", regency['nama_dagri'])
+        print("Subdistrict:", subdistrict['nama_dagri'])
+        print("Birth Date:", birth_date if gender == 'M' else str(int(birth_date) - 40).zfill(2))
+        print("Birth Month:", birth_month)
+        print("Birth Year:", birth_year)
+        print("Gender:", gender)
+        print("NIK: " + nik)
+    
 def generate_specific():
     '''
         Generate a specific NIK
@@ -188,18 +244,21 @@ def generate_specific():
             print("Invalid input. Special code must be 4 digits.")
 
     nik = province_code + regency_code + subdistrict_code + birth_date + birth_month + birth_year + special_code
-    print("NIK: " + nik)
+    print("NIK: " + nik + "\n")
 
 
 def main():
     while True:
         print("Welcome to NIK Generator")
         print("1. Generate Specific NIK")
+        print("2. Generate Random NIK")
         print("Type 'exit' to exit the program")
         choice = input("Choose: ")
 
         if choice == "1":
             generate_specific()
+        elif choice == "2":
+            generate_random()
         elif choice == "exit":
             break
         else:
